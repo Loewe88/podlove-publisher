@@ -65,3 +65,14 @@ function str2hex($str) {
   $tmp = unpack('H*', $str);
   return array_shift($tmp);
 }
+
+/**
+ * Cleanup XML1.0 forbidden UTF8 characters (within the limits of preg_replace).
+ * https://www.w3.org/TR/xml/#charsets
+ *
+ * @param  string $content
+ * @return string
+ */
+function cleanup_utf8_xml10( $content ) {
+    return preg_replace('/[\x00-\x08\x0b\x0c\x0e-\x1f]/', '', $content);
+}

@@ -20,6 +20,7 @@ function the_description() {
 	else
 		$description = $title;
 
+    $description = \Podlove\PHP\cleanup_utf8_xml10($description);
 	echo apply_filters( 'podlove_feed_item_description', $description );
 }
 
@@ -49,12 +50,27 @@ function override_feed_language( $feed ) {
  *
  * - Trim whitespace
  * - Convert special characters to HTML entities
+ * - Remove non XML1.0 allowed UTF-8 chars
  * 
  * @param  string $content
  * @return string
  */
 function prepare_for_feed( $content ) {
-	return trim( htmlspecialchars( $content ) );
+	return trim( htmlspecialchars( \Podlove\PHP\cleanup_utf8_xml10($content) ) );
+}
+
+/**
+ * prepares the Feed head data for display in Feed
+ *
+ * - Trim Whitespace
+ * - Remove non XML1.0 allowed UTF-8 chars
+ * - Wordpress convert_chars
+ *
+ * @param $content
+ * @return string
+ */
+function prepare_feed_heads( $content ) {
+    return trim(convert_chars(\Podlove\PHP\cleanup_utf8_xml10($content)));
 }
 
 function override_feed_head( $hook, $podcast, $feed, $format ) {
@@ -69,7 +85,7 @@ function override_feed_head( $hook, $podcast, $feed, $format ) {
 		'podlove_feed_itunes_explicit'
 	);
 	foreach ( $filter_hooks as $filter ) {
-		add_filter( $filter, 'convert_chars' );
+		add_filter( $filter, 'prepare_feed_heads' );
 	}
 	add_filter( 'podlove_feed_content', '\Podlove\Feeds\prepare_for_feed' );
 
@@ -172,8 +188,8 @@ function override_feed_head( $hook, $podcast, $feed, $format ) {
 		<itunes:name>%s</itunes:name>
 		<itunes:email>%s</itunes:email>
 	</itunes:owner>',
-			$podcast->owner_name,
-			$podcast->owner_email
+            $podcast->owner_name,
+            $podcast->owner_email
 		);
 		echo "\t" . apply_filters( 'podlove_feed_itunes_owner', $owner );
 		echo PHP_EOL;
@@ -186,7 +202,7 @@ function override_feed_head( $hook, $podcast, $feed, $format ) {
 		echo "\t" . apply_filters( 'podlove_feed_itunes_image', $coverimage );
 		echo PHP_EOL;
 
-		$subtitle = sprintf( '<itunes:subtitle>%s</itunes:subtitle>', $podcast->subtitle );
+		$subtitle = sprintf( '<itunes:subtitle>%s</itunes:subtitle>', $podcast->subtitle);
 		echo "\t" . apply_filters( 'podlove_feed_itunes_subtitle', $subtitle );
 		echo PHP_EOL;
 
@@ -255,7 +271,7 @@ function override_feed_entry( $hook, $podcast, $feed, $format ) {
 			$author = sprintf( '<itunes:author>%s</itunes:author>', $author );
 			$xml .= $tag_prefix . apply_filters( 'podlove_feed_itunes_author', $author );
 
-			$subtitle = apply_filters( 'podlove_feed_content', \Podlove\PHP\escape_shortcodes(strip_tags($episode->subtitle)) );
+			$subtitle = apply_filters( 'podlove_feed_content', \Podlove\PHP\escape_shortcodes(strip_tags($episode->subtitle)));
 			$subtitle = sprintf( '<itunes:subtitle>%s</itunes:subtitle>', $subtitle )  ;
 			$xml .= $tag_prefix . apply_filters( 'podlove_feed_itunes_subtitle', $subtitle );
 
@@ -276,7 +292,7 @@ function override_feed_entry( $hook, $podcast, $feed, $format ) {
 			$type = sprintf( '<itunes:episodeType>%s</itunes:episodeType>', $type )  ;
 			$xml .= $tag_prefix . apply_filters( 'podlove_feed_itunes_type_xml', $type );
 
-			$summary = apply_filters( 'podlove_feed_content', \Podlove\PHP\escape_shortcodes(strip_tags($episode->summary)) );
+			$summary = apply_filters( 'podlove_feed_content', \Podlove\PHP\escape_shortcodes(strip_tags($episode->summary)));
 			if (strlen($summary)) {
 				$summary = sprintf( '<itunes:summary>%s</itunes:summary>', $summary );
 			}
